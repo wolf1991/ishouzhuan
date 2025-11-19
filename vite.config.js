@@ -1,13 +1,17 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
+import ghPages404 from './vite-plugin-gh-pages.js'
 
 export default defineConfig({
   // GitHub Pages 部署需要设置 base 路径
   // 如果仓库名是 ishouzhuan，则 base 为 /ishouzhuan/
   // 本地开发时可以通过环境变量覆盖
   base: process.env.VITE_BASE || '/',
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    ghPages404() // 为 GitHub Pages 创建 404.html
+  ],
   server: {
     port: 3000,
     open: true,
