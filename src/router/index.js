@@ -7,8 +7,12 @@ const routes = [
   { path: '/admin/apps', name: 'AppsAdmin', component: AppsAdmin }
 ]
 
+// 支持 GitHub Pages 的 base 路径
+// 如果部署到 GitHub Pages，base 会是 /ishouzhuan/
+const base = import.meta.env.BASE_URL || '/'
+
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(base),
   routes
 })
 
