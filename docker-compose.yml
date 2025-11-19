@@ -1,0 +1,36 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    image: my-vue-app:latest
+    container_name: web
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - apps-api
+    volumes:
+      # 可选：将 SSL 证书挂载到容器（如果使用 HTTPS）
+      # - /opt/ssl:/etc/nginx/ssl:ro
+      # 可选：将 ACME 校验目录挂载出来（Let’s Encrypt webroot 验证）
+      # - /opt/acme:/usr/share/nginx/html/.well-known/acme-challenge
+    environment:
+      - TZ=Asia/Shanghai
+
+  apps-api:
+    image: node:lts-alpine
+    container_name: apps-api
+    working_dir: /srv
+    command: sh -c "npm i --omit=dev && node server/apps-api.js"
+    volumes:
+      - .:/srv
+      - apps_data:/data
+    environment:
+      - PORT=3001
+      - APPS_JSON_PATH=/data/apps.json
+    expose:
+      - "3001"
+
+volumes:
+  apps_data:
+

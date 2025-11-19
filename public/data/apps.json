@@ -1,0 +1,56 @@
+{
+  "navItems": [
+    { "name": "首页", "url": "https://szw.lmzy98.cn/m/", "active": true },
+    { "name": "苹果赚钱", "url": "https://szw.lmzy98.cn/m/list.php?tid=1", "active": false },
+    { "name": "手机兼职", "url": "https://szw.lmzy98.cn/m/list.php?tid=2", "active": false },
+    { "name": "安卓赚钱", "url": "https://szw.lmzy98.cn/m/list.php?tid=3", "active": false },
+    { "name": "阅读赚钱", "url": "https://szw.lmzy98.cn/m/list.php?tid=4", "active": false },
+    { "name": "最近更新", "url": "https://szw.lmzy98.cn/m/list.php?tid=6", "active": false },
+    { "name": "专题推荐", "url": "https://szw.lmzy98.cn/m/list.php?tid=7", "active": false }
+  ],
+  "recommandApps": [
+    { "name": "赚客帮", "url": "https://szw.lmzy98.cn/m/view.php?aid=156", "image": "./staticFiles/1-251031015404L2.jpg" },
+    { "name": "APP在线封装", "url": "https://szw.lmzy98.cn/m/view.php?aid=155", "image": "./staticFiles/1-250Z3011644F8.jpg" },
+    { "name": "公众号登录回调", "url": "https://szw.lmzy98.cn/m/view.php?aid=150", "image": "./staticFiles/1-250Q40045550-L.png" },
+    { "name": "新芳AI写作", "url": "https://szw.lmzy98.cn/m/view.php?aid=144", "image": "./staticFiles/1-250Q32353490-L.png" },
+    { "name": "梦幻捕鱼", "url": "https://szw.lmzy98.cn/m/view.php?aid=148", "image": "./staticFiles/1-250Q4002H30-L.png" },
+    { "name": "果冻试玩", "url": "https://szw.lmzy98.cn/m/view.php?aid=147", "image": "./staticFiles/1-250Q4001R50-L.png" },
+    { "name": "玩赚星球", "url": "https://szw.lmzy98.cn/m/view.php?aid=145", "image": "./staticFiles/1-250Q3235G10-L.png" },
+    { "name": "自助发卡平台", "url": "https://szw.lmzy98.cn/m/view.php?aid=143", "image": "./staticFiles/1-250Q3234J10-L.png" }
+  ],
+  "recentApps": [
+    { "name": "赚客帮", "url": "https://szw.lmzy98.cn/m/view.php?aid=156", "image": "./staticFiles/1-251031015404L2.jpg" },
+    { "name": "APP在线封装", "url": "https://szw.lmzy98.cn/m/view.php?aid=155", "image": "./staticFiles/1-250Z3011644F8.jpg" },
+    { "name": "公众号登录回调", "url": "https://szw.lmzy98.cn/m/view.php?aid=150", "image": "./staticFiles/1-250Q40045550-L.png" },
+    { "name": "新芳AI写作", "url": "https://szw.lmzy98.cn/m/view.php?aid=144", "image": "./staticFiles/1-250Q32353490-L.png" },
+    { "name": "梦幻捕鱼", "url": "https://szw.lmzy98.cn/m/view.php?aid=148", "image": "./staticFiles/1-250Q4002H30-L.png" },
+    { "name": "欢乐短剧", "url": "https://szw.lmzy98.cn/m/view.php?aid=146", "image": "./staticFiles/1-250Q40002250-L.png" },
+    { "name": "果冻试玩", "url": "https://szw.lmzy98.cn/m/view.php?aid=147", "image": "./staticFiles/1-250Q4001R50-L.png" },
+    { "name": "玩赚星球", "url": "https://szw.lmzy98.cn/m/view.php?aid=145", "image": "./staticFiles/1-250Q3235G10-L.png" }
+  ],
+  "iosApps": [
+    { "name": "梦幻捕鱼", "url": "https://szw.lmzy98.cn/m/view.php?aid=148", "image": "./staticFiles/1-250Q4002H30-L.png", "date": "2025-08-14" },
+    { "name": "欢乐短剧", "url": "https://szw.lmzy98.cn/m/view.php?aid=146", "image": "./staticFiles/1-250Q40002250-L.png", "date": "2025-08-14" },
+    { "name": "爱钱试玩", "url": "https://szw.lmzy98.cn/m/view.php?aid=30", "image": "./staticFiles/15T15040604a0-530Y.png", "date": "2020-03-26" }
+  ],
+  "apps": [
+    { "name": "APP在线封装", "url": "https://szw.lmzy98.cn/m/view.php?aid=155", "image": "./staticFiles/1-250Z3011644F8.jpg", "date": "2025-09-03" },
+    { "name": "公众号登录回调", "url": "https://szw.lmzy98.cn/m/view.php?aid=150", "image": "./staticFiles/1-250Q40045550-L.png", "date": "2025-08-14" }
+  ],
+  "androidApps": [
+    { "name": "赚客帮", "url": "https://szw.lmzy98.cn/m/view.php?aid=156", "image": "./staticFiles/1-251031015404L2.jpg", "date": "2025-10-31" },
+    { "name": "玩赚星球", "url": "https://szw.lmzy98.cn/m/view.php?aid=145", "image": "./staticFiles/1-250Q3235G10-L.png", "date": "2025-08-13" }
+  ],
+  "topApps": [
+    { "name": "APP在线封装", "url": "https://szw.lmzy98.cn/m/view.php?aid=155", "image": "/staticFiles/1-250Z3011644F8.jpg" },
+    { "name": "果冻试玩", "url": "https://szw.lmzy98.cn/m/view.php?aid=147", "image": "/staticFiles/1-250Q4001R50-L.png" },
+    { "name": "欢乐短剧", "url": "https://szw.lmzy98.cn/m/view.php?aid=146", "image": "/staticFiles/1-250Q40002250-L.png" },
+    { "name": "梦幻捕鱼", "url": "https://szw.lmzy98.cn/m/view.php?aid=148", "image": "/staticFiles/1-250Q4002H30-L.png", "date": "2025-08-14" },
+    { "name": "玩赚星球", "url": "https://szw.lmzy98.cn/m/view.php?aid=145", "image": "/staticFiles/1-250Q3235G10-L.png", "date": "2025-08-13" },
+    { "name": "新芳AI写作", "url": "https://szw.lmzy98.cn/m/view.php?aid=144", "image": "/staticFiles/1-250Q32353490-L.png", "date": "2025-08-14" },
+    { "name": "码支付", "url": "https://szw.lmzy98.cn/m/view.php?aid=142", "image": "/staticFiles/1-250Q32340540-L.png", "date": "2025-08-13" },
+    { "name": "自助发卡平台", "url": "https://szw.lmzy98.cn/m/view.php?aid=143", "image": "/staticFiles/1-250Q3234J10-L.png", "date": "2025-08-13" },
+    { "name": "赚客帮", "url": "https://szw.lmzy98.cn/m/view.php?aid=156", "image": "/staticFiles/1-251031015404L2.jpg", "date": "2025-10-31" }
+  ]
+}
+
