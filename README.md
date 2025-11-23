@@ -114,13 +114,134 @@ npm run dev:all
   - 导入/下载 JSON
   - 保存到服务器（POST /api/apps）
 
+## 部署指南
+
+本项目通常采用“双线部署”：
+- **前端**：构建为静态文件，部署到 GitHub Pages（`https://wolf1991.github.io/ishouzhuan/`）
+- **后端**：Express + TypeScript，部署到你自己的服务器（例如 AWS EC2）
+
+### 一、部署前端到 GitHub Pages
+项目中已包含 `.github/workflows/deploy.yml`，推送到 `main` 分支后自动构建并发布。如果你 Fork 或更改仓库名，请确认：
+1. `vite.config.js` 中 `base` 设置为 `/<你的仓库名>/`
+2. `.github/workflows/deploy.yml` 的 `VITE_BASE` 环境变量保持同步
+3. `Settings -> Pages` 中选择 `GitHub Actions` 作为 Source
+
+访问：
+- 首页：`https://<你的 GitHub 用户名>.github.io/<仓库名>/`
+- 后台：`https://<你的 GitHub 用户名>.github.io/<仓库名>/admin/apps`
+
+### 二、部署后端（AWS EC2，无域名先用 IP）
+
+以 Amazon Linux 2023 为例（若为 Amazon Linux 2，将 `dnf` 换成 `yum`）：
+
+#### 1. 系统初始化
+```bash
+sudo dnf update -y
+sudo dnf install -y git curl tar gcc-c++ make
+```
+安装 Node.js 20：
+```bash
+curl -fsSL https://rpm.nodesource.com/setup_20.x | sudo bash -
+sudo dnf install -y nodejs
+node -v
+npm -v
+```
+
+#### 2. 拉取代码 & 安装依赖
+```bash
+git clone https://github.com/wolf1991/ishouzhuan.git
+cd ishouzhuan
+npm install
+```
+
+#### 3. 构建前端 & 后端
+```bash
+npm run build            # 构建前端（dist/）
+npm run build:server     # 将 server/apps-api.ts 编译到 dist/server/
+```
+
+#### 4. 配置环境变量
+创建 `.env`：
+```
+PORT=3001
+APPS_JSON_PATH=/home/ec2-user/ishouzhuan/public/data/apps.json
+R2_ENDPOINT=...
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_BUCKET=...
+R2_PUBLIC_BASE=...
+R2_DIRECTORY=uploads
+```
+如暂时没有 Cloudflare R2，可先留空（上传功能会提示未配置）。
+
+#### 5. 启动后端（PM2）
+```bash
+sudo npm install -g pm2
+pm2 start dist/server/apps-api.js --name ishouzhuan-api
+pm2 save
+pm2 startup   # 按提示执行，以便开机自启
+```
+API 默认监听 `3001` 端口。
+
+#### 6. 安装并配置 Nginx（使用 IP 访问）
+```bash
+sudo dnf install -y nginx
+sudo systemctl enable nginx
+sudo systemctl start nginx
+```
+创建 `/etc/nginx/conf.d/ishouzhuan.conf`：
+```nginx
+server {
+    listen 80;
+    server_name _;  # 暂无域名，使用 IP 时写 _
+
+    root /home/ec2-user/ishouzhuan/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+加载配置：
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+```
+此时可直接用 IP 访问：
+- 前端：`http://<EC2_PUBLIC_IP>/`
+- 后台：`http://<EC2_PUBLIC_IP>/admin/apps`
+
+若以后有域名，只需将 `server_name _;` 改为你的域名，并用 Certbot 配置 HTTPS。
+
+#### 7. （可选）GitHub Actions 自动部署后端
+可在 `.github/workflows/deploy-backend.yml` 中配置 SSH 部署脚本，实现推送 main 分支后自动：
+1. SSH 到 EC2
+2. 拉取最新代码
+3. `npm install --production`
+4. `npm run build` / `npm run build:server`
+5. `pm2 reload ishouzhuan-api`
+
+记得在 GitHub Secrets 中配置：
+- `EC2_HOST`：EC2 公网 IP
+- `EC2_USER`：登录用户名（如 `ec2-user`）
+- `EC2_SSH_KEY`：私钥
+
+### 三、当前无域名如何访问？
+直接在浏览器输入 `http://<EC2_PUBLIC_IP>/` 即可。如果想通过 IP+端口直连后端，也可访问 `http://<EC2_PUBLIC_IP>:3001/api/apps`。使用 Nginx 反向代理后，前端和 API 都统一到 80 端口，无需加端口号。
+
 ## 常见问题
-1. 端口被占用？
-   - 修改前端/后端运行端口或关闭占用进程。后端可通过 `PORT` 环境变量指定。
-2. Windows 下 concurrently 报错？
-   - 已使用 `npm:` 前缀方式，通常兼容。若仍有问题，请更新 shell 或使用 PowerShell/Git Bash。
-3. ESM/TS 运行报错？
-   - 我们已使用 `ts-node --esm` 直跑 TS。若本地环境不支持，请改用 tsc 编译后 `node` 运行。
+1. **端口被占用**：更改 `PORT` 环境变量，或在 Nginx 中修改转发端口。
+2. **API 无法访问**：确认 `.env` 配置、`pm2 status` 是否运行、Nginx 反向代理是否指向 `127.0.0.1:3001`。
+3. **R2 上传失败**：检查 `R2_ENDPOINT`、`Access Key` 等是否正确，或暂时禁用上传按钮。
+4. **Windows 下 concurrently 报错**：已使用 `npm:script` 方式，若仍有问题请更新 Node/npm，或改用 PowerShell。
+5. **TypeScript/ESM 报错**：可以 `npm run build:server && node dist/server/apps-api.js`，无需 `ts-node`。
 
 ## 许可证
 该项目仅用于演示与内部使用，未指定开源许可证。如需开源请补充 LICENSE 文件。

@@ -69,7 +69,6 @@ const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID || ''
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY || ''
 const R2_BUCKET = process.env.R2_BUCKET || ''
 const R2_PUBLIC_BASE = process.env.R2_PUBLIC_BASE || ''
-const R2_DIRECTORY = process.env.R2_DIRECTORY || 'uploads'
 
 const r2Configured = Boolean(R2_ENDPOINT && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY && R2_BUCKET && R2_PUBLIC_BASE)
 
@@ -145,7 +144,8 @@ app.post('/api/apps', async (req: Request, res: Response) => {
   }
 })
 
-app.post('/api/upload', upload.single('file'), async (req: UploadRequest, res) => {
+// 通用的文件上传处理函数
+async function handleUpload(req: UploadRequest, res: Response, category: 'pic' | 'app') {
   console.log(R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_PUBLIC_BASE)
   if (!r2Configured || !r2Client) {
     return res.status(500).json({ error: 'R2_NOT_CONFIGURED', message: 'Cloudflare R2 未配置' })
@@ -155,7 +155,7 @@ app.post('/api/upload', upload.single('file'), async (req: UploadRequest, res) =
   }
   const file = req.file
   const ext = path.extname(file.originalname) || ''
-  const key = `${R2_DIRECTORY.replace(/\/$/, '')}/${Date.now()}-${randomUUID()}${ext}`
+  const key = `${category}/${Date.now()}-${randomUUID()}${ext}`
   try {
     await r2Client.send(
       new PutObjectCommand({
@@ -165,13 +165,28 @@ app.post('/api/upload', upload.single('file'), async (req: UploadRequest, res) =
         ContentType: file.mimetype
       })
     )
-    const publicBase = R2_PUBLIC_BASE.replace(/\/$/, '')
-    const url = `${publicBase}/${key}`
+    // 构建公共访问 URL
+    // 确保 R2_PUBLIC_BASE 不以斜杠结尾，key 不以斜杠开头
+    const publicBase = R2_PUBLIC_BASE.replace(/\/+$/, '') // 移除末尾的所有斜杠
+    const cleanKey = key.replace(/^\/+/, '') // 移除开头的斜杠
+    // 拼接 URL，确保只有一个斜杠分隔
+    const url = `${publicBase}/${cleanKey}`
+    console.log(`[POST /api/upload/${category}] Uploaded file:`, { key, url, publicBase, cleanKey })
     return res.json({ key, url })
   } catch (e: any) {
-    console.error('[POST /api/upload] UPLOAD_FAILED', e)
+    console.error(`[POST /api/upload/${category}] UPLOAD_FAILED`, e)
     return res.status(500).json({ error: 'UPLOAD_FAILED', message: String(e?.message || e) })
   }
+}
+
+// POST /api/upload/pic - 上传图片文件
+app.post('/api/upload/pic', upload.single('file'), async (req: UploadRequest, res: Response) => {
+  return handleUpload(req, res, 'pic')
+})
+
+// POST /api/upload/app - 上传应用文件
+app.post('/api/upload/app', upload.single('file'), async (req: UploadRequest, res: Response) => {
+  return handleUpload(req, res, 'app')
 })
 
 const port = Number(process.env.PORT || 3001)

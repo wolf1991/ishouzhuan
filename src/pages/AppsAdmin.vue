@@ -383,7 +383,13 @@ export default defineComponent({
     const uploadFile = async (file: File) => {
       const formData = new FormData()
       formData.append('file', file)
-      const res = await fetch('/api/upload', {
+      if (!pendingUpload.value) {
+        throw new Error('未指定上传类型')
+      }
+      // 根据字段类型选择对应的上传接口
+      // image 字段使用 /api/upload/pic，url 字段使用 /api/upload/app
+      const endpoint = pendingUpload.value.field === 'image' ? '/api/upload/pic' : '/api/upload/app'
+      const res = await fetch(endpoint, {
         method: 'POST',
         body: formData
       })

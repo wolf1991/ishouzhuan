@@ -1,0 +1,29 @@
+# 通用爬虫规则
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# 百度爬虫特殊配置
+User-agent: Baiduspider
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 1
+
+# 百度移动爬虫
+User-agent: Baiduspider-mobile
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Crawl-delay: 1
+
+# 百度图片爬虫
+User-agent: Baiduspider-image
+Allow: /staticFiles/
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap位置（百度支持）
+Sitemap: https://szw.lmzy98.cn/sitemap.xml
+

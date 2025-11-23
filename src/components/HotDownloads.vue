@@ -9,7 +9,7 @@
         <li v-for="app in topThreeApps" :key="app.name" class="text-center">
           <div class="mt-4">
             <a :href="app.url" class="block">
-              <img :src="app.image" class="w-16 h-16 rounded-lg mx-auto">
+              <img :src="app.image" :alt="app.name + ' - 手机赚钱应用'" class="w-16 h-16 rounded-lg mx-auto">
             </a>
           </div>
           <a :href="app.url" class="block">
