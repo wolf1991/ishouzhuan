@@ -27,7 +27,7 @@ jobs:
         run: npm run build:server
 
       - name: Package files
-        run: tar czf release.tar.gz dist/server package.json package-lock.json .env production.env
+        run: tar czf release.tar.gz dist/server package.json package-lock.json
 
       - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.7
@@ -45,7 +45,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/deploy/ishouzhuan
-            tar xzf ~/deployments/release.tar.gz -C /home/deploy/ishouzhuan
+            cd /home/ec2-user/ishouzhuan
+            tar xzf ~/deployments/release.tar.gz -C /home/ec2-user/ishouzhuan
             npm install --production
             pm2 reload ishouzhuan-api
