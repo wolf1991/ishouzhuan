@@ -1,9 +1,9 @@
-name: Deploy backend to EC2
+name: Deploy to EC2
 
 on:
   push:
     branches:
-      - main  # 或者 you branch
+      - main
   workflow_dispatch:
 
 jobs:
@@ -23,22 +23,46 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build frontend
+        run: npm run build
+
       - name: Build server
         run: npm run build:server
 
-      - name: Package files
-        run: tar czf release.tar.gz dist/server package.json package-lock.json
+      - name: Package frontend files
+        run: |
+          # 打包前端文件（排除 server 目录）
+          # Vite 会将 public 目录下的文件复制到 dist 根目录
+          cd dist
+          # 使用 tar 打包所有文件，排除 server 目录
+          tar czf ../frontend-release.tar.gz \
+            --exclude='./server' \
+            --exclude='./server/*' \
+            .
+          cd ..
 
-      - name: Copy files to EC2
+      - name: Package backend files
+        run: tar czf backend-release.tar.gz dist/server package.json package-lock.json
+
+      - name: Copy frontend to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "release.tar.gz"
+          source: "frontend-release.tar.gz"
           target: "~/deployments"
 
-      - name: SSH into EC2 and deploy
+      - name: Copy backend to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "backend-release.tar.gz"
+          target: "~/deployments"
+
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -46,6 +70,38 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ec2-user/ishouzhuan
-            tar xzf ~/deployments/release.tar.gz -C /home/ec2-user/ishouzhuan
+            
+            # 备份当前 dist 目录
+            if [ -d "dist" ]; then
+              cp -r dist dist.backup.$(date +%Y%m%d_%H%M%S) || true
+            fi
+            
+            # 部署前端文件
+            echo "Deploying frontend..."
+            mkdir -p dist
+            tar xzf ~/deployments/frontend-release.tar.gz -C dist
+            
+            # 确保 SEO 文件在正确位置（Vite 会将 public 下的文件复制到 dist 根目录）
+            # 如果 SEO 文件在 public 目录，复制到根目录
+            if [ -f "dist/public/robots.txt" ] && [ ! -f "dist/robots.txt" ]; then
+              cp dist/public/robots.txt dist/robots.txt || true
+            fi
+            if [ -f "dist/public/sitemap.xml" ] && [ ! -f "dist/sitemap.xml" ]; then
+              cp dist/public/sitemap.xml dist/sitemap.xml || true
+            fi
+            
+            # 设置正确的文件权限
+            chmod -R 755 dist || true
+            
+            # 部署后端文件
+            echo "Deploying backend..."
+            tar xzf ~/deployments/backend-release.tar.gz -C /home/ec2-user/ishouzhuan
+            
+            # 安装生产依赖并重启服务
             npm install --production
-            pm2 reload ishouzhuan-api
+            pm2 reload ishouzhuan-api || pm2 start dist/server/apps-api.js --name ishouzhuan-api
+            
+            # 清理备份（保留最近3个）
+            ls -dt dist.backup.* 2>/dev/null | tail -n +4 | xargs rm -rf || true
+            
+            echo "Deployment completed successfully!"
