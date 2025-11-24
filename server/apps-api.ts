@@ -91,6 +91,100 @@ async function ensureDir(p: string): Promise<void> {
   } catch {}
 }
 
+// 备份 apps.json 文件
+async function backupAppsJson(): Promise<void> {
+  try {
+    // 检查原文件是否存在
+    try {
+      await fs.access(APPS_JSON_PATH)
+    } catch {
+      // 文件不存在，无需备份
+      return
+    }
+
+    // 读取旧数据
+    const oldContent = await fs.readFile(APPS_JSON_PATH, 'utf-8')
+    
+    // 创建备份基础目录（在 APPS_JSON_PATH 的同一目录下）
+    const backupBaseDir = path.join(path.dirname(APPS_JSON_PATH), 'backups')
+    
+    // 生成日期目录结构：yyyy/mm/dd
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    
+    // 创建日期目录：backups/yyyy/mm/dd/
+    const backupDir = path.join(backupBaseDir, String(year), month, day)
+    await fs.mkdir(backupDir, { recursive: true })
+
+    // 生成备份文件名：hh:mm-app.json
+    const backupFileName = `${hours}:${minutes}-app.json`
+    const backupPath = path.join(backupDir, backupFileName)
+
+    // 写入备份文件
+    await fs.writeFile(backupPath, oldContent, 'utf-8')
+    const relativePath = path.relative(path.dirname(APPS_JSON_PATH), backupPath)
+    console.log(`[BACKUP] Created backup: ${relativePath}`)
+
+    // 清理旧备份，只保留最近 10 个
+    await cleanupOldBackups(backupBaseDir)
+  } catch (e: any) {
+    console.error('[BACKUP] Backup failed:', e)
+    // 备份失败不影响主流程，继续执行
+  }
+}
+
+// 清理旧备份文件，只保留最近 10 个
+async function cleanupOldBackups(backupBaseDir: string): Promise<void> {
+  try {
+    // 递归收集所有备份文件
+    const backupFiles: Array<{ name: string; path: string; mtime: Date }> = []
+    
+    async function collectBackups(dir: string): Promise<void> {
+      try {
+        const entries = await fs.readdir(dir, { withFileTypes: true })
+        for (const entry of entries) {
+          const fullPath = path.join(dir, entry.name)
+          if (entry.isDirectory()) {
+            // 递归遍历子目录
+            await collectBackups(fullPath)
+          } else if (entry.isFile() && entry.name.endsWith('-app.json')) {
+            // 获取文件修改时间用于排序
+            const stats = await fs.stat(fullPath)
+            backupFiles.push({
+              name: entry.name,
+              path: fullPath,
+              mtime: stats.mtime
+            })
+          }
+        }
+      } catch (e) {
+        // 忽略无法访问的目录
+      }
+    }
+
+    await collectBackups(backupBaseDir)
+
+    // 按修改时间排序（最新的在前）
+    backupFiles.sort((a, b) => b.mtime.getTime() - a.mtime.getTime())
+
+    // 如果超过 10 个，删除多余的
+    if (backupFiles.length > 10) {
+      const filesToDelete = backupFiles.slice(10)
+      for (const file of filesToDelete) {
+        await fs.unlink(file.path)
+        console.log(`[BACKUP] Deleted old backup: ${file.path}`)
+      }
+    }
+  } catch (e: any) {
+    console.error('[BACKUP] Cleanup failed:', e)
+    // 清理失败不影响主流程
+  }
+}
+
 // 将任意读到的数据归一化为新结构
 // function normalize(data: LegacyAppsData | undefined | null): AppsData {
 //   const safe = data || {}
@@ -135,6 +229,10 @@ app.post('/api/apps', async (req: Request, res: Response) => {
     if (incoming === null || typeof incoming !== 'object') {
       return res.status(400).json({ error: 'INVALID_PAYLOAD', message: 'Payload must be an object' })
     }
+    
+    // 在写入新数据之前，先备份旧数据
+    await backupAppsJson()
+    
     await ensureDir(APPS_JSON_PATH)
     await fs.writeFile(APPS_JSON_PATH, JSON.stringify(incoming, null, 2), 'utf-8')
     return res.json({ ok: true })
